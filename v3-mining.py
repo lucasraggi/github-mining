@@ -1,38 +1,60 @@
 import requests
 import json
+import logging
 
 
-def get_all_bug_issues(issues):
+def is_event_closed(issue, params, username, token):
+    event_res = requests.get(issue['events_url'], params=params, auth=(username, token))
+    events = event_res.json()
+    for event in events:
+        if event['event'] == 'closed':
+            return True
+    return False
+
+
+def get_all_pages(res, issues, params, username, token):
+    count = 0
+    while 'next' in res.links.keys():
+        logging.info('Retrieving page ' + count)
+        res = requests.get(res.links['next']['url'], params=params, auth=(username, token))
+        issues.extend(res.json())
+        count += 1
+    return issues
+
+
+def get_all_bug_issues(issues, params, username, token):
     for issue in issues:
-        if 'pull_request' not in issue:
-            for label in issue['labels']:
-                if label['name'].find("bug") != -1:
-                    print(issue['title'])
-                    print("State: " + issue['state'])
-                    print("     " + label['name'])
+        for label in issue['labels']:
+            if label['name'].find("bug") != -1 and is_event_closed(issue, params, username, token):
+                print(issue['title'])
+                print("State: " + issue['state'])
+                print("     " + label['name'])
 
 
-def get_all_issues(issues):
+def get_all_issues(issues, params, username, token):
     count = 1
     for issue in issues:
         print(str(count) + '- ' + issue['title'])
+        print('     ' + issue['events_url'])
+        print('-----------------------------------')
         count += 1
 
 
 def main():
     url = 'https://api.github.com/repos/spring-projects/spring-boot/issues'
-    params = {'state': 'closed', 'page': '0', 'per_page': '100'}
-    r = requests.get(url, params=params)
-    link = r.headers.get('link', None)
-    while link is not None:
-        print(link)
-        print('-------------------------------------------------')
-        r = requests.get(url)
-        link = r.headers.get('link', None)
-        url = link.split(">")[0][1:]
-    #issues = r.json()
-    #get_all_issues(issues)
+    params = {'state': 'closed', 'per_page': '100'}
+
+    username = 'lucas.raggi@hotmail.com'
+    token = '232d08ee5274613f1d8f063abaa7fded8656fd6b'
+
+    res = requests.get(url, params=params, auth=(username, token))
+    if res.ok:
+        issues = res.json()
+        # issues = get_all_pages(res, issues, params, username, token)
+        # get_all_issues(issues, params, username, token)
+        get_all_bug_issues(issues, params, username, token)
+    else:
+        logging.warning(str(res.status_code))
 
 
 main()
-
