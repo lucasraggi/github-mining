@@ -21,10 +21,17 @@ def get_all_issues(issues):
 
 def main():
     url = 'https://api.github.com/repos/spring-projects/spring-boot/issues'
-    params = {'state': 'closed', 'per_page': '100'}
+    params = {'state': 'closed', 'page': '0', 'per_page': '100'}
     r = requests.get(url, params=params)
-    issues = r.json()
-    get_all_issues(issues)
+    link = r.headers.get('link', None)
+    while link is not None:
+        print(link)
+        print('-------------------------------------------------')
+        r = requests.get(url)
+        link = r.headers.get('link', None)
+        url = link.split(">")[0][1:]
+    #issues = r.json()
+    #get_all_issues(issues)
 
 
 main()
