@@ -1,6 +1,11 @@
 import requests
 import logging
 
+# TODO
+# Make requests of comments and events from the entire repo instead of making requests for each issue
+# Save data collected to a csv or database
+# Refactor functions with objects to simplify parameters
+
 
 def get_comment_from_issue(issue, params, username, token):
     comment_res = requests.get(issue['comments_url'], params=params, auth=(username, token))
