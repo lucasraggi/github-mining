@@ -3,6 +3,14 @@ import json
 import logging
 
 
+def get_comment_from_issue(issue, params, username, token):
+    comment_res = requests.get(issue['comments_url'], params=params, auth=(username, token))
+    comments = comment_res.json()
+    print('     Comments from ' + issue['title'])
+    for comment in comments:
+        print('             Comment ID: ' + str(comment['id']))
+
+
 def is_event_closed(issue, params, username, token):
     event_res = requests.get(issue['events_url'], params=params, auth=(username, token))
     events = event_res.json()
@@ -26,9 +34,10 @@ def get_all_bug_issues(issues, params, username, token):
     for issue in issues:
         for label in issue['labels']:
             if label['name'].find("bug") != -1 and is_event_closed(issue, params, username, token):
-                print(issue['title'])
+                print('Issue title: ' + issue['title'])
                 print("State: " + issue['state'])
-                print("     " + label['name'])
+                print("     State Label: " + label['name'])
+                get_comment_from_issue(issue, params, username, token)
 
 
 def get_all_issues(issues, params, username, token):
