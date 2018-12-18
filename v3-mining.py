@@ -6,7 +6,7 @@ import logging
 def get_comment_from_issue(issue, params, username, token):
     comment_res = requests.get(issue['comments_url'], params=params, auth=(username, token))
     comments = comment_res.json()
-    print('     Comments from ' + issue['title'])
+    print('     Comments from: ' + str(issue['id']))
     for comment in comments:
         print('             Comment ID: ' + str(comment['id']))
 
@@ -16,7 +16,7 @@ def is_event_closed(issue, params, username, token):
     events = event_res.json()
     for event in events:
         if event['event'] == 'closed':
-            return True
+            return event['actor']['login']
     return False
 
 
@@ -33,20 +33,27 @@ def get_all_pages(res, issues, params, username, token):
 def get_all_bug_issues(issues, params, username, token):
     for issue in issues:
         for label in issue['labels']:
-            if label['name'].find("bug") != -1 and is_event_closed(issue, params, username, token):
+            closed_by = is_event_closed(issue, params, username, token)
+            if label['name'].find("bug") != -1 and closed_by is not False:
                 print('Issue title: ' + issue['title'])
-                print("State: " + issue['state'])
-                print("     State Label: " + label['name'])
+                print('     Opened By: ' + issue['user']['login'])
+                print('     Closed By: ' + closed_by)
+                print('     State: ' + issue['state'])
+                print('     State Label: ' + label['name'])
                 get_comment_from_issue(issue, params, username, token)
 
 
-def get_all_issues(issues, params, username, token):
-    count = 1
+def get_all_issues_debug(issues, params, username, token):
     for issue in issues:
-        print(str(count) + '- ' + issue['title'])
-        print('     ' + issue['events_url'])
-        print('-----------------------------------')
-        count += 1
+        for label in issue['labels']:
+            closed_by = is_event_closed(issue, params, username, token)
+            if 'pull_request' not in issue and closed_by is not False:
+                print('Issue title: ' + issue['title'])
+                print('     Opened By: ' + issue['user']['login'])
+                print('     Closed By: ' + closed_by)
+                print('     State: ' + issue['state'])
+                print('     State Label: ' + label['name'])
+                get_comment_from_issue(issue, params, username, token)
 
 
 def main():
@@ -60,8 +67,8 @@ def main():
     if res.ok:
         issues = res.json()
         # issues = get_all_pages(res, issues, params, username, token)
-        # get_all_issues(issues, params, username, token)
-        get_all_bug_issues(issues, params, username, token)
+        get_all_issues_debug(issues, params, username, token)
+        # get_all_bug_issues(issues, params, username, token)
     else:
         logging.warning(str(res.status_code))
 
