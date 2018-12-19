@@ -3,17 +3,18 @@ from miner.issue_miner import IssueMiner
 
 class GitHubMiner:
 
-    def __init__(self, url, username, token):
+    def __init__(self, url, username, token, params):
         self.url = url
         self.username = username
         self.token = token
+        self.params = params
 
     def mine_issues(self, issues_output, events_output):
 
         # Mine GitHub closed issues
-        mine_issues = IssueMiner(self.url, issues_output, events_output, self.username, self.token)
+        mine_issues = IssueMiner(self.url, issues_output, events_output, self.username, self.token, self.params)
         mine_issues.mine_issues()
-        mine_issues.mine_issues_events()
+       #  mine_issues.mine_issues_events()
 
     # def mine_pr(self, pr_output):
     #
