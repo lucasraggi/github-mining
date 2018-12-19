@@ -1,5 +1,5 @@
 from optparse import OptionParser
-from miner import github_miner
+from miner.github_miner import GitHubMiner
 
 # Create the CLI parser
 usage = "usage: %prog [options] arg"
@@ -20,6 +20,6 @@ parser.add_option("--params", dest="token", help="The GitHub params in format: {
 
 
 # Start GitHub mining
-miner = github_miner.GitHubMiner(options.url, options.username, options.token)
+miner = GitHubMiner(options.url, options.username, options.token)
 miner.mine_issues(options.issues_output, options.events_output)
 miner.mine_pr(options.pr_output)

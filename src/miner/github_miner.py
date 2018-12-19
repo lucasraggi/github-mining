@@ -1,4 +1,4 @@
-from..miner import issue_miner
+from miner.issue_miner import IssueMiner
 
 
 class GitHubMiner:
@@ -11,7 +11,7 @@ class GitHubMiner:
     def mine_issues(self, issues_output, events_output):
 
         # Mine GitHub closed issues
-        mine_issues = issue_miner.IssueMiner(self.url, issues_output, events_output, self.username, self.token)
+        mine_issues = IssueMiner(self.url, issues_output, events_output, self.username, self.token)
         mine_issues.mine_issues()
         mine_issues.mine_issues_events()
 
