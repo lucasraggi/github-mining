@@ -96,9 +96,6 @@ class IssueMiner:
             # print('issue title: ', issue['title'])
             for label in issue['labels']:
                 if 'pull_request' not in issue and label['name'].find("bug") != -1 and self.is_issue_closed(issue):
-                    print('label name: ', label['name'])
-                    print('label[name].find(bug): ', label['name'].find("bug"))
-                    print('number: ', issue['number'])
                     issue_events = self.get_key_from_issue(issue, 'events_url')
                     issue_comments = self.get_key_from_issue(issue, 'comments_url')
 
@@ -114,11 +111,10 @@ class IssueMiner:
 
     def mine_issues(self):
         res_url = self.base_url + self.url + "/issues"
-        print('params: ', self.params)
         res = requests.get(res_url, params=self.params, auth=(self.username, self.token))
         if res.ok:
             issues = res.json()
-            # issues = get_all_pages(res, issues, params, username, token)
+            issues = self.get_all_pages(res, issues)
             self.get_all_issues(issues)
         else:
             logging.warning(str(res.status_code))
