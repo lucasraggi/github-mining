@@ -66,7 +66,7 @@ class IssueMiner:
     def get_all_pages(self, res, issues):
         count = 0
         while 'next' in res.links.keys():
-            logging.info('Retrieving page ' + count)
+            logging.info('Retrieving page ', count)
             res = requests.get(res.links['next']['url'], params=self.params, auth=(self.username, self.token))
             issues.extend(res.json())
             count += 1
@@ -114,7 +114,7 @@ class IssueMiner:
         res = requests.get(res_url, params=self.params, auth=(self.username, self.token))
         if res.ok:
             issues = res.json()
-            issues = self.get_all_pages(res, issues)
+            # issues = self.get_all_pages(res, issues)
             self.get_all_issues(issues)
         else:
             logging.warning(str(res.status_code))

@@ -25,5 +25,5 @@ parser.add_option("--params", dest="params", help="The GitHub params in format: 
 
 # Start GitHub mining
 miner = GitHubMiner(options.url, options.username, options.token, options.params)
-# miner.mine_issues(options.issues_output, options.issues_events_output, options.issues_comments_output)
+miner.mine_issues(options.issues_output, options.issues_events_output, options.issues_comments_output)
 miner.mine_prs(options.pr_output, options.pr_events_output, options.pr_comments_output, options.pr_reviewers_output)

@@ -99,10 +99,8 @@ class PullRequestMiner:
         print('Mining pull requests, events and comments...')
         for pr in prs:
             pr_issue = self.get_json_from_key(pr, 'issue_url')
-            print('issue: ', pr_issue['title'])
             for label in pr_issue['labels']:
                 if label['name'].find("bug") != -1 and self.is_issue_closed(pr_issue):
-                    print("got in: ",  pr_issue['title'])
                     pr_events = self.get_json_from_key(pr_issue, 'events_url')
                     pr_comments = self.get_json_from_key(pr_issue, 'comments_url')
 
