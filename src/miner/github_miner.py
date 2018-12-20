@@ -9,10 +9,10 @@ class GitHubMiner:
         self.token = token
         self.params = params
 
-    def mine_issues(self, issues_output, events_output):
+    def mine_issues(self, issues_output, events_output, comments_output):
 
         # Mine GitHub closed issues
-        mine_issues = IssueMiner(self.url, issues_output, events_output, self.username, self.token, self.params)
+        mine_issues = IssueMiner(self.url, issues_output, events_output, comments_output, self.username, self.token, self.params)
         mine_issues.mine_issues()
        #  mine_issues.mine_issues_events()
 
