@@ -62,6 +62,7 @@ class PullRequestMiner:
         key_res = requests.get(source[key], params=self.params, auth=(self.username, self.token))
         if key_res.ok:
             keys = key_res.json()
+            keys = self.get_all_pages(key_res, keys)
             return keys
         else:
             logging.warning(str(key_res.status_code))
@@ -121,7 +122,7 @@ class PullRequestMiner:
         res = requests.get(res_url, params=self.params, auth=(self.username, self.token))
         if res.ok:
             prs = res.json()
-            # prs = self.get_all_pages(res, prs)
+            prs = self.get_all_pages(res, prs)
             self.get_all_prs(prs)
         else:
             logging.warning(str(res.status_code))

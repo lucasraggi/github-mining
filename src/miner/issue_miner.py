@@ -58,19 +58,20 @@ class IssueMiner:
         key_res = requests.get(issue[key], params=self.params, auth=(self.username, self.token))
         if key_res.ok:
             keys = key_res.json()
+            keys = self.get_all_pages(key_res, keys)
             return keys
         else:
             logging.warning(str(key_res.status_code))
 
     # Get issues from all pages from selected repository
-    def get_all_pages(self, res, issues):
+    def get_all_pages(self, res, json_list):
         count = 0
         while 'next' in res.links.keys():
             logging.info('Retrieving page ', count)
             res = requests.get(res.links['next']['url'], params=self.params, auth=(self.username, self.token))
-            issues.extend(res.json())
+            json_list.extend(res.json())
             count += 1
-        return issues
+        return json_list
 
     def is_issue_closed(self, issue):
         closed_count = 0
@@ -114,7 +115,7 @@ class IssueMiner:
         res = requests.get(res_url, params=self.params, auth=(self.username, self.token))
         if res.ok:
             issues = res.json()
-            # issues = self.get_all_pages(res, issues)
+            issues = self.get_all_pages(res, issues)
             self.get_all_issues(issues)
         else:
             logging.warning(str(res.status_code))
