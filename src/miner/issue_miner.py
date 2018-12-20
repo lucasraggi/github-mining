@@ -93,7 +93,7 @@ class IssueMiner:
     def get_all_issues(self, issues):
         logging.info('Mining issues, events and comments...')
         print('Mining issues, events and comments...')
-        for issue in issues:
+        for issue in tqdm.tqdm(issues):
             # print('issue title: ', issue['title'])
             for label in issue['labels']:
                 if 'pull_request' not in issue and label['name'].find("bug") != -1 and self.is_issue_closed(issue):

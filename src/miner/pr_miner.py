@@ -5,12 +5,7 @@ from ast import literal_eval
 import requests
 import logging
 
-# TODO
-# Make requests of comments and events from the entire repo instead of making requests for each issue
-# Save data collected to a csv or database
-# Refactor functions with objects to simplify parameters
 import tqdm as tqdm
-
 
 class PullRequestMiner:
 
@@ -98,7 +93,7 @@ class PullRequestMiner:
     def get_all_prs(self, prs):
         logging.info('Mining pull requests, events and comments...')
         print('Mining pull requests, events and comments...')
-        for pr in prs:
+        for pr in tqdm.tqdm(prs):
             pr_issue = self.get_json_from_key(pr, 'issue_url')
             for label in pr_issue['labels']:
                 if label['name'].find("bug") != -1 and self.is_issue_closed(pr_issue):
