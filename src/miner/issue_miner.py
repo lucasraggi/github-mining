@@ -14,7 +14,7 @@ import tqdm as tqdm
 
 class IssueMiner:
 
-    def __init__(self, url, issues_output_path, issues_events_output_path, issues_comments_output_path, username, token, params):
+    def __init__(self, url, issues_output_path, issues_events_output_path, issues_comments_output_path, username, token, params, mine_data_output):
         self.url = url
         self.issues_output_path = issues_output_path
         self.comments_output_path = issues_comments_output_path
@@ -22,12 +22,15 @@ class IssueMiner:
         self.username = username
         self.token = token
         self.params = literal_eval(params)
+        self.mine_data_output_path = mine_data_output
 
         self.closed_issues = {}
         self.closed_issues_numbers = []
         self.closed_issues_events = {}
         self.closed_issues_comments = {}
         self.base_url = 'https://api.github.com/repos/'
+
+        self.mine_data = {}
 
     def save_json(self, json_type):
         path, json_list = self.path_and_data_by_type(json_type)
@@ -94,7 +97,6 @@ class IssueMiner:
         logging.info('Mining issues, events and comments...')
         print('Mining issues, events and comments...')
         for issue in tqdm.tqdm(issues):
-            # print('issue title: ', issue['title'])
             for label in issue['labels']:
                 if 'pull_request' not in issue and label['name'].find("bug") != -1 and self.is_issue_closed(issue):
                     issue_events = self.get_key_from_issue(issue, 'events_url')
@@ -109,6 +111,8 @@ class IssueMiner:
         self.save_json('issues')
         self.save_json('events')
         self.save_json('comments')
+        logging.info('Github issues, events and comments successfully mined...')
+        print('Github issues, events and comments successfully writen...')
 
     def mine_issues(self):
         res_url = self.base_url + self.url + "/issues"
@@ -121,7 +125,71 @@ class IssueMiner:
             logging.warning(str(res.status_code))
 
 
+    def mine_open_event(self, pr_output_path):
 
+        # Mine open event
+        issue_files = os.listdir(pr_output_path)
 
+        for issue_json in issue_files:
+            id = issue_json.split('.')
+            with open(pr_output_path + '/' + issue_json, 'r') as json_file:
+                issue_data = json.load(json_file)
 
+                # Creating reference to the pull request by ID:
+                if id[0] not in self.mine_data:
+                    self.mine_data[id[0]] = {}
 
+                # Saving the autor of the issues/PR by ID:
+                self.mine_data[id[0]]['opened_by'] = issue_data['user']['login']
+
+    # Mine close event
+    def mine_close_event(self, issue_events_output):
+        # Getting all events file in dir:
+        pr_files = os.listdir(issue_events_output)
+
+        for pr_json in pr_files:
+            id = pr_json.split('.')
+            with open(issue_events_output + '/' + pr_json, 'r') as json_file:
+                issue_data = json.load(json_file)
+
+                # Creating reference to the issue by ID:
+                if id[0] not in self.mine_data:
+                    self.mine_data[id[0]] = {}
+
+                # Iterating over the events in issue:
+                for issue_event in issue_data:
+                    if issue_event['event'] == 'closed':
+                        # Saving the autor of the CLOSE event by ID:
+                        self.mine_data[id[0]]['closed_by'] = issue_event['actor']['login']
+
+    def mine_comments(self, issue_comments_output):
+        # Getting all events file in dir:
+        issue_files = os.listdir(issue_comments_output)
+
+        for issue_json in issue_files:
+            id = issue_json.split('.')
+            with open(issue_comments_output + '/' + issue_json, 'r') as json_file:
+                issue_comment_data = json.load(json_file)
+
+                # Creating reference to the issue by ID:
+                if id[0] not in self.mine_data:
+                    self.mine_data[id[0]] = {}
+
+                # Iterating over the comments in issue:
+                self.mine_data[id[0]]['comments'] = []
+                for issue_comment in issue_comment_data:
+                    # Saving all body of the commments on this issue/PR:
+                    self.mine_data[id[0]]['comments'].append(issue_comment)
+
+    def mine_data_from_json(self, issues_output, issue_events_output, issue_comments_output, mine_data_output):
+        self.mine_open_event(issues_output)
+        self.mine_close_event(issue_events_output)
+        self.mine_comments(issue_comments_output)
+
+        if not os.path.exists(mine_data_output):
+            os.makedirs(mine_data_output)
+
+        with open(mine_data_output + '/issue_mined_data.json', 'w') as output_file:
+            json.dump(self.mine_data, output_file)
+
+        print('Mined issue data was successfully writen...')

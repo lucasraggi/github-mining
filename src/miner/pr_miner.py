@@ -9,15 +9,16 @@ import tqdm as tqdm
 
 class PullRequestMiner:
 
-    def __init__(self, url, pr_output_path, pr_events_output_path, pr_comments_output_path, pr_reviewers_output_path, username, token, params):
+    def __init__(self, url, pr_output_path, pr_events_output_path, pr_comments_output_path, pr_reviewers_output_path, username, token, params, mine_data_output):
         self.url = url
         self.prs_output_path = pr_output_path
-        self.comments_output_path = pr_events_output_path
-        self.events_output_path = pr_comments_output_path
+        self.comments_output_path = pr_comments_output_path
+        self.events_output_path = pr_events_output_path
         self.reviewers_output_path = pr_reviewers_output_path
         self.username = username
         self.token = token
         self.params = literal_eval(params)
+        self.mine_data_output_path = mine_data_output
 
         self.pull_requests = {}
         self.pull_requests_numbers = []
@@ -25,6 +26,8 @@ class PullRequestMiner:
         self.pull_requests_events = {}
         self.pull_requests_comments = {}
         self.base_url = 'https://api.github.com/repos/'
+
+        self.mine_data = {}
 
     def save_json(self, json_type):
         path, json_list = self.path_and_data_by_type(json_type)
@@ -111,6 +114,8 @@ class PullRequestMiner:
         self.save_json('events')
         self.save_json('comments')
         self.save_json('reviews')
+        logging.info('Github pull requests, events and comments successfully mined...')
+        print('Github pull requests, events and comments successfully writen...')
 
     def mine_prs(self):
         res_url = self.base_url + self.url + "/pulls"
@@ -122,8 +127,72 @@ class PullRequestMiner:
         else:
             logging.warning(str(res.status_code))
 
+    def mine_open_event(self, pr_output_path):
 
+        # Mine open event
+        pr_files = os.listdir(pr_output_path)
 
+        for pr_json in pr_files:
+            id = pr_json.split('.')
 
+            with open(pr_output_path + '/' + pr_json, 'r') as json_file:
+                pr_data = json.load(json_file)
 
+                # Creating reference to the pull request by ID:
+                if id[0] not in self.mine_data:
+                    self.mine_data[id[0]] = {}
 
+                # Saving the autor of the issues/PR by ID:
+                self.mine_data[id[0]]['opened_by'] = pr_data['user']['login']
+
+    # Mine close event
+    def mine_close_event(self, pr_events_output):
+        # Getting all events file in dir:
+        pr_files = os.listdir(pr_events_output)
+
+        for pr_json in pr_files:
+            id = pr_json.split('.')
+            with open(pr_events_output + '/' + pr_json, 'r') as json_file:
+                pr_data = json.load(json_file)
+
+                # Creating reference to the pull request by ID:
+                if id[0] not in self.mine_data:
+                    self.mine_data[id[0]] = {}
+
+                # Iterating over the events in PR:
+                for pr_event in pr_data:
+                    if pr_event['event'] == 'closed':
+                        # Saving the autor of the CLOSE event by ID:
+                        self.mine_data[id[0]]['closed_by'] = pr_event['actor']['login']
+
+    def mine_comments(self, pr_comments_output):
+        # Getting all events file in dir:
+        pr_files = os.listdir(pr_comments_output)
+
+        for pr_json in pr_files:
+            id = pr_json.split('.')
+            with open(pr_comments_output + '/' + pr_json, 'r') as json_file:
+                pr_comment_data = json.load(json_file)
+
+                # Creating reference to the pull request by ID:
+                if id[0] not in self.mine_data:
+                    self.mine_data[id[0]] = {}
+
+                # Iterating over the comments in PR:
+                self.mine_data[id[0]]['comments'] = []
+                for pr_comment in pr_comment_data:
+                    # Saving all body of the commments on this issue/PR:
+                    self.mine_data[id[0]]['comments'].append(pr_comment)
+
+    def mine_data_from_json(self, pr_output, pr_events_output, pr_comments_output, mine_data_output):
+        self.mine_open_event(pr_output)
+        self.mine_close_event(pr_events_output)
+        self.mine_comments(pr_comments_output)
+
+        if not os.path.exists(mine_data_output):
+            os.makedirs(mine_data_output)
+
+        with open(mine_data_output + '/PR_mined_data.json', 'w') as output_file:
+            json.dump(self.mine_data, output_file)
+
+        print('Mined PR data was successfully writen...')

@@ -18,6 +18,7 @@ parser.add_option("--pr_reviewers_output", dest="pr_reviewers_output", help="Pat
 parser.add_option("--username", dest="username", help="The GitHub username for authentication")
 parser.add_option("--token", dest="token", help="The GitHub token for authentication")
 parser.add_option("--params", dest="params", help="The GitHub params in format: {'param1': 'value1', 'param2': 'value2, ...'}")
+parser.add_option("--mine_data_output", dest="mine_data_output", help="Path to the mined data from all API project data")
 
 # Parse the CLI args
 (options, args) = parser.parse_args()
@@ -25,5 +26,5 @@ parser.add_option("--params", dest="params", help="The GitHub params in format: 
 
 # Start GitHub mining
 miner = GitHubMiner(options.url, options.username, options.token, options.params)
-miner.mine_issues(options.issues_output, options.issues_events_output, options.issues_comments_output)
-miner.mine_prs(options.pr_output, options.pr_events_output, options.pr_comments_output, options.pr_reviewers_output)
+miner.mine_issues(options.issues_output, options.issues_events_output, options.issues_comments_output, options.mine_data_output)
+miner.mine_prs(options.pr_output, options.pr_events_output, options.pr_comments_output, options.pr_reviewers_output, options.mine_data_output)
